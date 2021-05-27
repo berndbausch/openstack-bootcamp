@@ -1,0 +1,23 @@
+
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+# See https://wiki.debian.org/NetworkConfiguration
+
+#source /etc/network/interfaces.d/*
+
+iface eth0 inet manual
+   pre-up ip l set $IFACE up
+   post-down ip l set $IFACE down
+
+auto br1
+iface br1 inet static
+bridge_ports eno1
+address 192.168.1.27
+netmask 255.255.255.0
+gateway 192.168.1.1
+dns-nameservers 192.168.1.16, 1.1.1.1
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+

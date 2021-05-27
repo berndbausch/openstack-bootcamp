@@ -1,0 +1,42 @@
+######################################################################
+                      globals.yml
+######################################################################
+kolla_base_distro: "ubuntu"
+kolla_internal_vip_address: "192.168.1.250"
+
+network_interface: "ens3"
+neutron_external_interface: "ens4"
+kolla_internal_vip_address: "192.168.1.250"
+
+# Better use normal ovs (the default) instead of ovn
+neutron_plugin_agent: "openvswitch"
+####neutron_plugin_agent: "ovn"
+
+enable_swift: "yes"
+enable_cinder: "yes"
+enable_cinder_backup: "yes"
+enable_cinder_backend_lvm: "yes"
+glance_backend_swift: "yes"
+cinder_backup_driver: "swift"
+
+enable_octavia: "yes"
+
+octavia_certs_country: AT
+octavia_certs_state: Tirol
+octavia_certs_organization: Uni_Innsbruck
+octavia_certs_organizational_unit: OpenStack
+
+####################################################################
+             Check and/or explore other globals
+####################################################################
+
+# enable_cells - why is the default "no"?
+# enable_central_logging
+# enable_neutron_provider_networks - why default "no"?
+# enable_mariabackup
+# enable_neutron_vpnaas
+# enable_neutron_dvr
+# enable_neutron_qos
+# enable_neutron_agent_ha
+# enable_redis
+# keystone_token_provider
