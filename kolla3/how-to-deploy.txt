@@ -1,0 +1,23 @@
+
+Create a Ubuntu disk: make-ubuntu.sh. Access the Ubuntu console and install the machine.
+To avoid modifying or deleting it: chattr +i ubuntu...qcow2
+
+Create three Kolla servers: for i in 1 2 3; do make-server.sh $i; done
+
+Use their consoles to fix the network.
+Username is stack, password was set when installing Ubuntu; normally: pw
+Netplan: Correct interface names and addresses.
+/etc/hosts: Add k1, k2, k3, labserver.
+hostnamectl
+On k2, k3: cd /etc/ssh; sudo rm ssh_host*; sudo ssh-keygen -A
+
+k1 is the deployer. Copy essentials files to it, then log on.
+
+scp daemon.json globals.yml kolla-notes.txt multinode prepare* stack@k1:
+ssh stack@k1
+
+Manually do the first steps in prepare.sh. The rest can be executed as a script.
+
+Create SSH identity and copy it to k2 and k3
+
+
