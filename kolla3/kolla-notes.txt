@@ -252,6 +252,7 @@ kolla-ansible -i multinode deploy
 ####################################################################
 
 pip install python-openstackclient   # doc says "python3-openstackclient"
+pip install osc-placement
 kolla-ansible post-deploy            # create adminrc with correct password
 . /etc/kolla/admin-openrc.sh
 
@@ -273,9 +274,12 @@ Useful software that should be added
 ####################################################################
 
 sudo apt install libvirt-clients mariadb-client-10.3 -y
-pip install osc-placement
+
 
 
 ### nova-manage cell_v2 discover_hosts --verbose # to add kolla-2 to the unnamed cell
+
+Elasticsearch problem: Try swappiness=1
+
 
 
