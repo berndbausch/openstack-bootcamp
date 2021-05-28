@@ -1,0 +1,90 @@
+[[local|localrc]]
+
+PUBLIC_INTERFACE=ens7
+
+###########################################################################
+### Passwords
+
+ADMIN_PASSWORD=hpinvent
+DATABASE_PASSWORD=$ADMIN_PASSWORD
+RABBIT_PASSWORD=$ADMIN_PASSWORD
+SERVICE_PASSWORD=$ADMIN_PASSWORD
+
+###########################################################################
+### Logging
+
+LOG_COLOR=False
+LOGFILE=$DEST/logs/stack.sh.log
+
+###########################################################################
+### Networking
+
+IP_VERSION=4
+HOST_IP=192.168.1.200
+
+###########################################################################
+### Software sources
+
+# use https since the vlabs proxy seems to block the git:// scheme
+###GIT_BASE=https://git.openstack.org
+# Ensure the latest software is installed
+PIP_UPGRADE=True
+
+###########################################################################
+### Glance
+
+DOWNLOAD_DEFAULT_IMAGES=False
+IMAGE_URLS="http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+
+# Glance's image import doesn't work when Glance runs as a UWSGI server
+# For this setting to take effect, devstack/lib/glance must be patched
+GLANCE_USE_UWSGI=False
+
+###########################################################################
+### Swift
+
+# by default, Devstack interactively asks for a hash value. Avoid this.
+SWIFT_HASH=123
+
+enable_service swift
+
+###########################################################################
+### Heat
+
+enable_plugin heat https://git.openstack.org/openstack/heat stable/ussuri
+enable_service h-eng h-api h-api-cfn h-api-cw
+
+enable_plugin heat-dashboard https://git.openstack.org/openstack/heat-dashboard stable/ussuri
+enable_service heat-dashboard
+
+###########################################################################
+### Cinder: Enable backup
+
+enable_service c-bak
+
+###########################################################################
+### Telemetry: Use Gnocchi as sample repository
+###            and configure medium archive policy
+
+CEILOMETER_BACKEND=gnocchi
+GNOCCHI_ARCHIVE_POLICY=medium
+enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer stable/ussuri
+enable_plugin aodh https://git.openstack.org/openstack/aodh stable/ussuri
+
+###########################################################################
+### Neutron: Enable internal DNS resolution in ml2_conf.ini
+
+Q_ML2_PLUGIN_EXT_DRIVERS=port_security,dns_domain_ports
+
+###########################################################################
+### Post config for Neutron (DNS) and Nova (allow KVM in Vmware machine)
+
+[[post-config|$NEUTRON_CONF]]
+[DEFAULT]
+dns_domain = devstack.org.
+
+[[post-config|/etc/nova/nova-cpu.conf]]
+[libvirt]
+# set machine type to work around bug
+# https://bugs.launchpad.net/ubuntu/+source/qemu/+bug/1691109
+###hw_machine_type = x86_64=pc-i440fx-xenial
