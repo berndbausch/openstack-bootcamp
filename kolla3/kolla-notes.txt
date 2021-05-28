@@ -71,14 +71,14 @@ On kolla-2: hostnamectl set-hostname kolla-2.home
             ls ssh_host*
 
 ######################################################################
-                      globals.yml
+                     Add this to /etc/kolla/globals.yml
 ######################################################################
 kolla_base_distro: "ubuntu"
 openstack_logging_debug: "True"
 
 network_interface: "ens3"
 neutron_external_interface: "ens4"
-kolla_internal_vip_address: "192.168.122.250"
+kolla_internal_vip_address: "192.168.122.253"
 enable_neutron_vpnaas: "yes"
 enable_neutron_qos: "yes"
 
@@ -96,15 +96,17 @@ octavia_certs_state: Tirol
 octavia_certs_organization: Uni_Innsbruck
 octavia_certs_organizational_unit: OpenStack
 
+enable_central_logging: "yes"
+enable_elastic_search_curator: "yes"
+
 docker_custom_config:
   registry-mirrors:
-    - http://192.168.1.16:4000
+    - http://CORRECT_URL:4000
 
 ####################################################################
              Check and/or explore other globals
 ####################################################################
 enable_cells 
-enable_central_logging
 enable_neutron_provider_networks - why default "no"?
 enable_mariabackup
 enable_neutron_vpnaas
@@ -120,8 +122,9 @@ keystone_token_provider
 
 # Before this, create an identity and copy it from kolla-1 to 1 and 2
 ssh-keygen
-ssh-copy-id kolla-1
-ssh-copy-id kolla-2
+ssh-copy-id k1
+ssh-copy-id k2
+ssh-copy-id k3
 
 Install multinode inventory
 
@@ -232,13 +235,6 @@ Non-standard port 4000 because Docker's 5000 is also used by Keystone.
 Also add "insecure-registries": ["192.168.1.16:4000"] to
 /etc/docker/daemon.json and restart the docker service,
 on all nodes.
-{
-    "insecure-registries": ["192.168.1.16:4000"],
-    "log-opts": {
-        "max-file": "5",
-        "max-size": "50m"
-    }
-}
 
 ####################################################################
                    Set up the cloud
@@ -263,9 +259,9 @@ kolla-ansible post-deploy            # create adminrc with correct password
 
 export KOLLA_DEBUG=1
 export ENABLE_EXT_NET=1
-export EXT_NET_CIDR=192.168.122.0/24
-export EXT_NET_RANGE=start=192.168.122.10,end=192.168.122.50
-export EXT_NET_GATEWAY=192.168.122.1
+export EXT_NET_CIDR=192.168.100.0/24
+export EXT_NET_RANGE=start=192.168.100.10,end=192.168.100.50
+export EXT_NET_GATEWAY=192.168.100.1
 
 ./venv/share/kolla-ansible/init-runonce
 
@@ -276,9 +272,9 @@ export EXT_NET_GATEWAY=192.168.122.1
 Useful software that should be added
 ####################################################################
 
-sudo apt install libvirt-clients mariadb-client-10.3
+sudo apt install libvirt-clients mariadb-client-10.3 -y
 pip install osc-placement
-pip install oslo.policy
+
 
 ### nova-manage cell_v2 discover_hosts --verbose # to add kolla-2 to the unnamed cell
 

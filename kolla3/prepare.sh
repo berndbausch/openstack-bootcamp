@@ -22,7 +22,7 @@ pip install 'ansible<2.10'
 #
 pip install kolla-ansible
 sudo mkdir -p /etc/kolla
-sudo chown bbausch:bbausch /etc/kolla
+sudo chown stack:stack /etc/kolla
 cp -r ~/venv/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 cp ~/venv/share/kolla-ansible/ansible/inventory/* .
 

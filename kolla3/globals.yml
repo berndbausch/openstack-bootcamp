@@ -26,6 +26,13 @@ octavia_certs_state: Tirol
 octavia_certs_organization: Uni_Innsbruck
 octavia_certs_organizational_unit: OpenStack
 
+enable_central_logging: "yes"
+enable_elasticsearch_curator: "yes"
+
+docker_custom_config:
+  registry-mirrors:
+    - http://192.168.122.1:4000
+
 ####################################################################
              Check and/or explore other globals
 ####################################################################
