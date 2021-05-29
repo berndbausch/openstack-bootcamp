@@ -279,7 +279,11 @@ sudo apt install libvirt-clients mariadb-client-10.3 -y
 
 ### nova-manage cell_v2 discover_hosts --verbose # to add kolla-2 to the unnamed cell
 
-Elasticsearch problem: Try swappiness=1
+### Elasticsearch problem: 
+sysctl  vm.swappiness=1
+sysctl  net.ipv4.tcp_retries2=5
+/etc/security/limits.conf: *		 soft	 nofile		 1048576
+
 
 
 

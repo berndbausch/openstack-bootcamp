@@ -9,7 +9,7 @@ fi
 [ ! -f k$NUM.qcow2 ] && sudo qemu-img create -f qcow2 -b ubuntu-base.qcow2 -F qcow2 k$NUM.qcow2  
 
 sudo virt-install --noautoconsole --cpu host --name k$NUM --ram $((18*1024)) --vcpus 3 \
-                  --graphics vnc,listen=0.0.0.0,port=1$1  \
+                  --graphics vnc,listen=0.0.0.0,port=591$1  \
                   --network network=default --network network=provider    \
                   --import                                     \
                   --disk k$NUM.qcow2,bus=scsi                   \
