@@ -1,0 +1,3 @@
+ cookie=0xbfa49cd6e097455, duration=10563.286s, table=0, n_packets=62518, n_bytes=6773268, priority=4,in_port="phy-br-ex",dl_vlan=2 actions=strip_vlan,NORMAL
+ cookie=0xbfa49cd6e097455, duration=10563.506s, table=0, n_packets=826, n_bytes=69742, priority=2,in_port="phy-br-ex" actions=drop
+ cookie=0xbfa49cd6e097455, duration=10563.528s, table=0, n_packets=110280, n_bytes=662376234, priority=0 actions=NORMAL

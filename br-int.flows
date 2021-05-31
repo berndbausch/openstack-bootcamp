@@ -1,0 +1,15 @@
+NXST_FLOW reply (xid=0x4):
+ cookie=0xb8c0ce52de86fc5, duration=46367.080s, table=0, n_packets=0, n_bytes=0, idle_age=46367, priority=65535,vlan_tci=0x0fff/0x1fff actions=drop
+ cookie=0xb8c0ce52de86fc5, duration=39600.284s, table=0, n_packets=0, n_bytes=0, idle_age=39604, priority=10,icmp6,in_port=9,icmp_type=136 actions=resubmit(,24)
+ cookie=0xb8c0ce52de86fc5, duration=39600.279s, table=0, n_packets=1329, n_bytes=55818, idle_age=42, priority=10,arp,in_port=9 actions=resubmit(,24)
+ cookie=0xb8c0ce52de86fc5, duration=46366.901s, table=0, n_packets=2, n_bytes=140, idle_age=46343, priority=2,in_port=1 actions=drop
+ cookie=0xb8c0ce52de86fc5, duration=39600.289s, table=0, n_packets=43871, n_bytes=4589047, idle_age=47, priority=9,in_port=9 actions=resubmit(,25)
+ cookie=0xb8c0ce52de86fc5, duration=46342.351s, table=0, n_packets=71361, n_bytes=652695600, idle_age=24, priority=3,in_port=1,vlan_tci=0x0000/0x1fff actions=mod_vlan_vid:2,resubmit(,60)
+ cookie=0xb8c0ce52de86fc5, duration=46367.132s, table=0, n_packets=180878, n_bytes=664959402, idle_age=24, priority=0 actions=resubmit(,60)
+ cookie=0xb8c0ce52de86fc5, duration=46367.152s, table=23, n_packets=0, n_bytes=0, idle_age=46367, priority=0 actions=drop
+ cookie=0xb8c0ce52de86fc5, duration=39600.286s, table=24, n_packets=0, n_bytes=0, idle_age=39600, priority=2,icmp6,in_port=9,icmp_type=136,nd_target=fe80::f816:3eff:fe11:a156 actions=resubmit(,60)
+ cookie=0xb8c0ce52de86fc5, duration=39600.281s, table=24, n_packets=1329, n_bytes=55818, idle_age=42, priority=2,arp,in_port=9,arp_spa=10.0.0.98 actions=resubmit(,25)
+ cookie=0xb8c0ce52de86fc5, duration=46367.094s, table=24, n_packets=0, n_bytes=0, idle_age=46367, priority=0 actions=drop
+ cookie=0xb8c0ce52de86fc5, duration=39600.295s, table=25, n_packets=45182, n_bytes=4643605, idle_age=42, priority=2,in_port=9,dl_src=fa:16:3e:11:a1:56 actions=resubmit(,60)
+ cookie=0xb8c0ce52de86fc5, duration=46367.097s, table=60, n_packets=297421, n_bytes=1322298607, idle_age=24, priority=3 actions=NORMAL
+ cookie=0xb8c0ce52de86fc5, duration=46367.076s, table=62, n_packets=0, n_bytes=0, idle_age=46367, priority=3 actions=NORMAL
