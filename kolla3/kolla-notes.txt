@@ -272,7 +272,20 @@ export EXT_NET_GATEWAY=192.168.100.1
 ####################################################################
 Build Amphora image
 ####################################################################
-####################################################################
+https://docs.openstack.org/kolla-ansible/latest/reference/networking/octavia.html#octavia-amphora-image
+
+sudo apt -y install debootstrap qemu-utils git kpartx
+git clone https://opendev.org/openstack/octavia -b victoria
+pip install diskimage-builder
+cd octavia/diskimage-create
+./diskimage-create.sh
+
+. /etc/kolla/octavia-openrc.sh
+openstack image create amphora-x64-haproxy.qcow2 --container-format bare \
+      --disk-format qcow2 --private --tag amphora --file amphora-x64-haproxy.qcow2 \
+      --property hw_architecture='x86_64' --property hw_rng_model=virtio
+# tag must match octavia_amp_image_tag in /etc/kolla/globals.yml. 
+# Octavia uses the tag to determine which image to use. Default is "amphora". 
 
 ####################################################################
 Useful software that should be added
