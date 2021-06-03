@@ -1,0 +1,33 @@
+neutron vpn-ikepolicy-create ikepolicy1
+neutron vpn-ipsecpolicy-create ipsecpolicy1
+
+Create network West with WestCIDR, routed with router_West
+   and network East with EastCIDR, routed with router_East 
+
+Create VPN service on both networks
+neutron vpn-service-create --name vpn_West router_West subnet_West
+neutron vpn-service-create --name vpn_East router_East subnet_East
+
+obtain external IPs for the two routers, WestIP and EastIP
+
+neutron ipsec-site-connection-create --name conn_east --vpnservice-id vpn_east 
+                                     --ikepolicy-id ikepolicy1 --ipsecpolicy-id ipsecpolicy1 
+                                     --peer-address WestIP --peer-id WestIP 
+                                     --peer-cidr WestCIDR --psk secret
+
+neutron ipsec-site-connection-create --name conn_west --vpnservice-id vpn_west 
+                                     --ikepolicy-id ikepolicy1 --ipsecpolicy-id ipsecpolicy1 
+                                     --peer-address EastIP --peer-id EastIP 
+                                     --peer-cidr EastCIDR --psk secret
+
+To remove everything
+
+    neutron ipsec-site-connection-delete conn_west
+    neutron ipsec-site-connection-delete conn_east
+
+    neutron vpn-service-delete West-service
+    neutron vpn-service-delete East-service
+
+    neutron vpn-ikepolicy-delete ikepolicy1
+    neutron vpn-ipsecpolicy-delete ipsecpolicy1
+

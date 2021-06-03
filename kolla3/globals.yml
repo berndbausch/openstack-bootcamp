@@ -2,7 +2,6 @@
                       globals.yml
 ######################################################################
 kolla_base_distro: "ubuntu"
-kolla_internal_vip_address: "192.168.1.250"
 
 network_interface: "ens3"
 neutron_external_interface: "ens4"
@@ -26,8 +25,9 @@ octavia_certs_state: Tirol
 octavia_certs_organization: Uni_Innsbruck
 octavia_certs_organizational_unit: OpenStack
 
-enable_central_logging: "yes"
-enable_elasticsearch_curator: "yes"
+enable_central_logging: "no"
+elasticsearch_address: "192.168.122.209"
+##enable_elasticsearch_curator: "yes"
 
 docker_custom_config:
   registry-mirrors:

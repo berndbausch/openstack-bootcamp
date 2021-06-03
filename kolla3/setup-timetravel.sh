@@ -2,7 +2,7 @@
 # creates user demo and gives it roles in those projects
 # creates timetravel-net and timetravel-router
 
-source /etc/kolla/admin_openrc.sh
+source ~/admin-openrc.sh
 openstack project create hadron
 openstack project create timetravel
 openstack user create demo --password pw
@@ -14,3 +14,5 @@ openstack subnet create timetravel-subnet --project timetravel --network timetra
 openstack router create timetravel-router --project timetravel
 openstack router set timetravel-router --external-gateway public1
 openstack router add subnet timetravel-router timetravel-subnet
+
+
