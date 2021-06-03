@@ -81,6 +81,8 @@ neutron_external_interface: "ens4"
 kolla_internal_vip_address: "192.168.122.253"
 enable_neutron_vpnaas: "yes"
 enable_neutron_qos: "yes"
+enable_neutron_provider_networks: "yes"
+octavia_network_interface: "ens4"
 
 enable_swift: "yes"
 enable_cinder: "yes"
@@ -252,6 +254,8 @@ kolla-ansible -i multinode deploy
 ####################################################################
 
 pip install python-openstackclient   # doc says "python3-openstackclient"
+pip install python-octaviaclient
+pip install python-neutronclient
 pip install osc-placement
 kolla-ansible post-deploy            # create adminrc with correct password
 . /etc/kolla/admin-openrc.sh
@@ -275,7 +279,7 @@ Build Amphora image
 https://docs.openstack.org/kolla-ansible/latest/reference/networking/octavia.html#octavia-amphora-image
 
 sudo apt -y install debootstrap qemu-utils git kpartx
-git clone https://opendev.org/openstack/octavia -b victoria
+git clone https://opendev.org/openstack/octavia -b stable/victoria
 pip install diskimage-builder
 cd octavia/diskimage-create
 ./diskimage-create.sh
@@ -291,13 +295,10 @@ openstack image create amphora-x64-haproxy.qcow2 --container-format bare \
 Useful software that should be added
 ####################################################################
 
-sudo apt install libvirt-clients mariadb-client-10.3 -y
+sudo apt install libvirt-clients -y    # computes
+sudo apt install mariadb-client-10.3 -y # controllers
 
-
-
-### nova-manage cell_v2 discover_hosts --verbose # to add kolla-2 to the unnamed cell
-
-### Elasticsearch problem: 
+### Configuration on elastic machine: 
 sysctl  vm.swappiness=1
 sysctl  net.ipv4.tcp_retries2=5
 /etc/security/limits.conf: *		 soft	 nofile		 1048576
