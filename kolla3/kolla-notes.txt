@@ -250,8 +250,8 @@ on all nodes.
 
 # The bootstrap-servers step was done before creating Swift rings
 # kolla-ansible -i multinode bootstrap-servers    # 5 minutes
-kolla-ansible -i multinode prechecks
-kolla-ansible -i multinode deploy
+kolla-ansible -i multi-compute prechecks
+kolla-ansible -i multi-compute deploy
 
 ####################################################################
                    First steps in the cloud
@@ -317,6 +317,11 @@ lb-mgmt-net is isolated VXLAN
 MAC=port's MAC
 PORT_ID=port's UUID
 ovs-vsctl -- --may-exist add-port br-int o-hm0 -- set Interface o-hm0 type=internal -- set Interface o-hm0 external-ids:iface-status=active -- set Interface o-hm0 external-ids:attached-mac=$MAC -- set Interface o-hm0 external-ids:iface-id=$PORT_ID -- set Interface o-hm0 external-ids:skip_cleanup=true
+sudo ip link set dev o-hm0 address $MAC
+sudo iptables -I INPUT -i o-hm0 -p udp --dport 5555 -j ACCEPT
+sudo iptables -I INPUT -i o-hm0 -p udp --dport 10514 -j ACCEPT
+sudo iptables -I INPUT -i o-hm0 -p udp --dport 20514 -j ACCEPT
+
 
 Or lb-mgmt-net is VLAN
 --> need VLAN interface on labserver
