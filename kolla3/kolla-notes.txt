@@ -303,6 +303,16 @@ sysctl  vm.swappiness=1
 sysctl  net.ipv4.tcp_retries2=5
 /etc/security/limits.conf: *		 soft	 nofile		 1048576
 
+#######################################################################
+#       PROBLEMS
+#######################################################################
 
+lb-mgmt-net is isolated VXLAN 
+--> transfer octavia-healthmanager port's MAC and IP to o-hm0 and
+    plug o-hm0 into br-int. See Devstack.
+
+cinder-backup can't GET /info from Swift. May be due to incorrect 
+setting of proxy-server expose_info (should be true).
+GET /info should not require authentication.
 
 
