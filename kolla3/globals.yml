@@ -1,4 +1,5 @@
 ---
+
 # You can use this file to override _any_ variable throughout Kolla.
 # Additional options can be found in the
 # 'kolla-ansible/ansible/group_vars/all.yml' file. Default value of all the
@@ -8,13 +9,16 @@
 kolla_base_distro: "ubuntu"
 openstack_logging_debug: "True"
 
+neutron_bridge_name: "br-ex,br-lb"
+enable_neutron_provider_networks: "yes"
+#enable_neutron_provider_networks: "no"
 network_interface: "ens3"
 neutron_external_interface: "ens4"
 kolla_internal_vip_address: "192.168.122.253"
 enable_neutron_vpnaas: "yes"
 enable_neutron_qos: "yes"
-enable_neutron_dvr: "yes"
-enable_neutron_agent_ha: "yes"
+###enable_neutron_dvr: "yes"
+###enable_neutron_agent_ha: "yes"
 
 enable_swift: "yes"
 enable_cinder: "yes"
@@ -26,21 +30,20 @@ cinder_backup_driver: "swift"
 enable_octavia: "yes"
 
 enable_neutron_provider_networks: "yes"
-octavia_network_interface: "ens4"
-
+###octavia_network_interface: "ens4"
+###
 octavia_amp_network:
   name: lb-mgmt-net
-  provider_network_type: vlan
-  provider_segmentation_id: 1000
-  provider_physical_network: physnet1
+  provider_network_type: flat
+  provider_physical_network: physnet2
   external: false
   shared: false
   subnet:
     name: lb-mgmt-subnet
-    cidr: "10.0.0.0/24"
-    allocation_pool_start: "10.0.0.100"
-    allocation_pool_end: "10.0.0.200"
-    gateway_ip: "10.0.0.1"
+    cidr: "192.168.200.0/24"
+    allocation_pool_start: "192.168.200.100"
+    allocation_pool_end: "192.168.200.150"
+    gateway_ip: "192.168.200.1"
     enable_dhcp: yes
 
 octavia_certs_country: AT
@@ -53,6 +56,8 @@ elasticsearch_address: "192.168.122.209"
 ##enable_elasticsearch_curator: "yes"
 
 docker_custom_config:
+  insecure-registries:
+    - http://192.168.122.1:4000
   registry-mirrors:
     - http://192.168.122.1:4000
 

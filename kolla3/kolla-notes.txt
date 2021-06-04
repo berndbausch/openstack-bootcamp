@@ -27,12 +27,14 @@ virt-install --cpu host --name kolla --ram $((9*1024)) --vcpus 2 --graphics vnc,
      PREPARE
 ######################################################################
 
+sudo apt update
 sudo apt install python3-dev libffi-dev gcc libssl-dev -y
 # make venv
 sudo apt install python3-venv -y
 python3 -m venv ~/venv
-source ~/venv/bin/activate
+
 echo source ~/venv/bin/activate >> .bashrc
+source ~/venv/bin/activate
 
 # update pip and install the correct version of Ansible
 pip install -U pip
@@ -229,6 +231,8 @@ sudo docker run -d --name registry --restart=always -p 4000:5000         \
 Add this to globals.yml: 
 
 docker_custom_config:
+  insecure-registries:
+    - http://192.168.1.16:4000
   registry-mirrors:
     - http://192.168.1.16:4000
 
@@ -310,6 +314,17 @@ sysctl  net.ipv4.tcp_retries2=5
 lb-mgmt-net is isolated VXLAN 
 --> transfer octavia-healthmanager port's MAC and IP to o-hm0 and
     plug o-hm0 into br-int. See Devstack.
+MAC=port's MAC
+PORT_ID=port's UUID
+ovs-vsctl -- --may-exist add-port br-int o-hm0 -- set Interface o-hm0 type=internal -- set Interface o-hm0 external-ids:iface-status=active -- set Interface o-hm0 external-ids:attached-mac=$MAC -- set Interface o-hm0 external-ids:iface-id=$PORT_ID -- set Interface o-hm0 external-ids:skip_cleanup=true
+
+Or lb-mgmt-net is VLAN
+--> need VLAN interface on labserver
+-->    sudo ip link add link virbr1 name virbr1.100 type vlan id 100
+-->    sudo ip link set virbr1.100 up
+-->    sudo ip a del 192.168.100.1/24 dev virbr1
+-->    sudo ip a add 192.168.100.1/24 dev virbr1.100
+Do we also need an interface for VLAN 1000? (lb-mgmt-net)?
 
 cinder-backup can't GET /info from Swift. May be due to incorrect 
 setting of proxy-server expose_info (should be true).
