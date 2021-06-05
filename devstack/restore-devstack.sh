@@ -7,6 +7,11 @@
 
 source ~/devstack/openrc admin admin
 
+###################    Swift    ####################
+
+echo Mounting Swift\'s filesystem
+sudo mount -t xfs -o loop,noatime,nodiratime,logbufs=8 /opt/stack/data/swift/drives/images/swift.img /opt/stack/data/swift/drives/sdb1
+
 ###################   Cinder   #####################
 #
 # Recreate the loop devices for the physical volumes
