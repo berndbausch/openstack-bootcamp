@@ -137,6 +137,11 @@ kolla-ansible -i multinode bootstrap-servers
 ####################################################################
                    Create Swift rings
 ####################################################################
+
+>>>> The commands below are in scripts.
+>>>> On deployer: prepare-swift.sh
+>>>> On the other controllers: prepare-swift-kolla2.sh
+
 Swift requires manually setting up the disks and the rings
 https://docs.openstack.org/kolla-ansible/latest/reference/storage/swift-guide.html
 To understand the ring builder:
@@ -220,7 +225,10 @@ In contrast to the documentation, certificates are created under
              Multinode requires local Docker registry
 ####################################################################
 
-I opt for a registry mirror: 
+This is useful because Docker limits me to 200 image downloads per 6 hours.
+It's better to have all images cached locally.
+
+I opt for a registry mirror running on the labserver: 
 https://docs.openstack.org/kolla-ansible/latest/user/multinode.html#option-2-registry-mirror
 
 sudo docker run -d --name registry --restart=always -p 4000:5000         \
@@ -236,17 +244,13 @@ docker_custom_config:
   registry-mirrors:
     - http://192.168.1.16:4000
 
-Non-standard port 4000 because Docker's 5000 is also used by Keystone.
-
-Also add "insecure-registries": ["192.168.1.16:4000"] to
-/etc/docker/daemon.json and restart the docker service,
-on all nodes.
+Non-standard port 4000 because Docker's 5000 is used by Keystone.
+This will configure /etc/docker/daemon.json on all nodes.
 
 ####################################################################
                    Set up the cloud
 ####################################################################
 
->> Ansible log needs to be configured in /etc/ansible/ansible.cfg <<
 
 # The bootstrap-servers step was done before creating Swift rings
 # kolla-ansible -i multinode bootstrap-servers    # 5 minutes
@@ -261,7 +265,7 @@ pip install python-openstackclient   # doc says "python3-openstackclient"
 pip install python-octaviaclient
 pip install python-neutronclient
 pip install osc-placement
-kolla-ansible post-deploy            # create adminrc with correct password
+kolla-ansible -i multi-compute post-deploy  # create adminrc with correct password
 . /etc/kolla/admin-openrc.sh
 
 # Script to set up a few initial resources
@@ -280,6 +284,9 @@ export EXT_NET_GATEWAY=192.168.100.1
 ####################################################################
 Build Amphora image
 ####################################################################
+
+It may exist already; check under ~stack/octavia/diskimage-create.
+
 https://docs.openstack.org/kolla-ansible/latest/reference/networking/octavia.html#octavia-amphora-image
 
 sudo apt -y install debootstrap qemu-utils git kpartx
@@ -288,19 +295,23 @@ pip install diskimage-builder
 cd octavia/diskimage-create
 ./diskimage-create.sh
 
+### Upload image to Glance
+
 . /etc/kolla/octavia-openrc.sh
 openstack image create amphora-x64-haproxy.qcow2 --container-format bare \
+      --project service                                                  \
       --disk-format qcow2 --private --tag amphora --file amphora-x64-haproxy.qcow2 \
       --property hw_architecture='x86_64' --property hw_rng_model=virtio
-# tag must match octavia_amp_image_tag in /etc/kolla/globals.yml. 
+# Image must be owned by the "service" project.
+# Tag must match octavia_amp_image_tag in /etc/kolla/globals.yml. 
 # Octavia uses the tag to determine which image to use. Default is "amphora". 
 
 ####################################################################
 Useful software that should be added
 ####################################################################
 
-sudo apt install libvirt-clients -y    # computes
-sudo apt install mariadb-client-10.3 -y # controllers
+ansible -i multi-compute -m apt -a name=libvirt-clients compute
+ansible -i multi-compute -m apt -a name=mariadb-client-10.3 control
 
 ### Configuration on elastic machine: 
 sysctl  vm.swappiness=1
@@ -310,6 +321,8 @@ sysctl  net.ipv4.tcp_retries2=5
 #######################################################################
 #       PROBLEMS
 #######################################################################
+
+### None of the below suggested solutions work. Consider it work in progress.
 
 lb-mgmt-net is isolated VXLAN 
 --> transfer octavia-healthmanager port's MAC and IP to o-hm0 and
@@ -335,4 +348,6 @@ cinder-backup can't GET /info from Swift. May be due to incorrect
 setting of proxy-server expose_info (should be true).
 GET /info should not require authentication.
 
+Swift logs to UDP port 5410, but nobody listens. Swift logs go nowhere. 
+It seems that fluentd is supposed to listen on 5410, but it doesn't.
 
