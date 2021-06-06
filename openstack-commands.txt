@@ -1,0 +1,15 @@
+
+#### Neutron agents for routers and DHCP servers
+openstack network agent list --agent-type router
+openstack network agent list --agent-type dhcp
+
+#### Locations of Neutron routers
+openstack network agent list --router ROUTER
+openstack router list --agent AGENT_ID
+
+#### Locations of Neutron DHCP servers
+openstack network agent list --network NETWORK
+openstack network list --agent AGENT_ID
+
+
+
