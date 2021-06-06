@@ -63,14 +63,11 @@ kolla-genpwd
 ######################################################################
                       nodes' personalities
 ######################################################################
-On kolla-1: hostnamectl set-hostname kolla-1.home
-            Add kolla-1.home and kolla-2.home to /etc/hosts
-On kolla-2: hostnamectl set-hostname kolla-2.home
-            Add kolla-1.home and kolla-2.home to /etc/hosts
-            cd /etc/ssh
-            sudo rm ssh_host*
-            sudo ssh-keygen -A   # create unique host keys
-            ls ssh_host*
+set IP addresses in netplan
+hostnamectl set-hostname k[123].home
+get /etc/hosts
+sudo rm /etc/ssh/ssh_host*
+sudo ssh-keygen -A   # create unique host keys
 
 ######################################################################
                      Add this to /etc/kolla/globals.yml
