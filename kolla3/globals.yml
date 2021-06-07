@@ -9,11 +9,14 @@
 kolla_base_distro: "ubuntu"
 openstack_logging_debug: "True"
 
-neutron_bridge_name: "br-ex,br-lb"
-enable_neutron_provider_networks: "yes"
-#enable_neutron_provider_networks: "no"
 network_interface: "ens3"
-neutron_external_interface: "ens4,ens8"
+# ens4 plugged into br-ex, named physnet1
+# ens5 plugged into br-lb, named physnet2
+neutron_bridge_name: "br-ex,br-lb"
+neutron_external_interface: "ens4,ens5"
+enable_neutron_provider_networks: "yes"
+
+
 kolla_internal_vip_address: "192.168.122.253"
 enable_neutron_vpnaas: "yes"
 enable_neutron_qos: "yes"
@@ -60,4 +63,6 @@ docker_custom_config:
     - http://192.168.122.1:4000
   registry-mirrors:
     - http://192.168.122.1:4000
+
+######################## End of customization ####################
 
