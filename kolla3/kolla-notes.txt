@@ -72,16 +72,27 @@ sudo ssh-keygen -A   # create unique host keys
 ######################################################################
                      Add this to /etc/kolla/globals.yml
 ######################################################################
+---
+
+# You can use this file to override _any_ variable throughout Kolla.
+# Additional options can be found in the
+# 'kolla-ansible/ansible/group_vars/all.yml' file. Default value of all the
+# commented parameters are shown here, To override the default value uncomment
+# the parameter and change its value.
+
 kolla_base_distro: "ubuntu"
 openstack_logging_debug: "True"
 
+neutron_bridge_name: "br-ex,br-lb"
+neutron_external_interface: "ens4,ens5"
+enable_neutron_provider_networks: "yes"
 network_interface: "ens3"
-neutron_external_interface: "ens4"
+
 kolla_internal_vip_address: "192.168.122.253"
 enable_neutron_vpnaas: "yes"
 enable_neutron_qos: "yes"
-enable_neutron_provider_networks: "yes"
-octavia_network_interface: "ens4"
+###enable_neutron_dvr: "yes"
+###enable_neutron_agent_ha: "yes"
 
 enable_swift: "yes"
 enable_cinder: "yes"
@@ -92,17 +103,39 @@ cinder_backup_driver: "swift"
 
 enable_octavia: "yes"
 
+enable_neutron_provider_networks: "yes"
+###octavia_network_interface: "ens4"
+###
+### physnet2 corresponds to br-lb with ens5
+###
+octavia_amp_network:
+  name: lb-mgmt-net
+  provider_network_type: flat
+  provider_physical_network: physnet2
+  external: false
+  shared: false
+  subnet:
+    name: lb-mgmt-subnet
+    cidr: "192.168.200.0/24"
+    allocation_pool_start: "192.168.200.100"
+    allocation_pool_end: "192.168.200.150"
+    gateway_ip: "192.168.200.1"
+    enable_dhcp: yes
+
 octavia_certs_country: AT
 octavia_certs_state: Tirol
 octavia_certs_organization: Uni_Innsbruck
 octavia_certs_organizational_unit: OpenStack
 
-enable_central_logging: "yes"
-enable_elastic_search_curator: "yes"
+enable_central_logging: "no"
+elasticsearch_address: "192.168.122.209"
+##enable_elasticsearch_curator: "yes"
 
 docker_custom_config:
+  insecure-registries:
+    - http://192.168.122.1:4000
   registry-mirrors:
-    - http://CORRECT_URL:4000
+    - http://192.168.122.1:4000
 
 ####################################################################
              Check and/or explore other globals
@@ -146,7 +179,12 @@ To understand the ring builder:
 - https://docs.openstack.org/swift/latest/install/initial-rings.html
 
 Steps:
-1- create partitions on three disks, put XFS filesystems on them
+
+1- ON THE CONTROLLERS: 
+   create partitions on three disks, put XFS filesystems on them
+   
+REMAINING STEPS ON THE DEPLOYER
+
 2- use swift-ring-builder in Docker image to create object builder 
 3- add the filesystems to the object ring
 4- do all of the above for the account and container rings
@@ -310,9 +348,33 @@ Useful software that should be added
 ansible -i multi-compute -m apt -a name=libvirt-clients compute
 ansible -i multi-compute -m apt -a name=mariadb-client-10.3 control
 
-### Configuration on elastic machine: 
-sysctl  vm.swappiness=1
-sysctl  net.ipv4.tcp_retries2=5
+####################################################################
+Elastic
+####################################################################
+
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+
+sudo apt update && sudo apt-get install apt-transport-https
+echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
+sudo apt-get update && sudo apt-get install elasticsearch
+sudo apt install kibana
+
+/etc/elasticsearch/elasticsearch.yml
+network.host: 192.168.122.209
+cluster.initial_master_nodes: ["192.168.122.209"]
+
+/etc/kibana/kibana.yml
+server.host: "192.168.122.209"
+elasticsearch.hosts: ["http://192.168.122.209:9200"]
+
+sudo systemctl enable --now elasticsearch kibana
+
+cat <<EOF | sudo tee /etc/sysctl.d/99-elastic.conf
+vm.swappiness=1
+net.ipv4.tcp_retries2=5
+EOF
+sudo sysctl -p /etc/sysctl.d/99-elastic.conf
+
 /etc/security/limits.conf: *		 soft	 nofile		 1048576
 
 #######################################################################
