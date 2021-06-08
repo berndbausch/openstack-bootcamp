@@ -83,6 +83,8 @@ sudo ssh-keygen -A   # create unique host keys
 kolla_base_distro: "ubuntu"
 openstack_logging_debug: "True"
 
+enable_cells: "yes"
+
 neutron_bridge_name: "br-ex,br-lb"
 neutron_external_interface: "ens4,ens5"
 enable_neutron_provider_networks: "yes"
@@ -154,11 +156,12 @@ keystone_token_provider
        First step installing necessary software incl Docker
 ####################################################################
 
-# Before this, create an identity and copy it from kolla-1 to 1 and 2
+# Create an identity and copy it to all machines
+rm ~/.ssh/known_hosts 
 ssh-keygen
-ssh-copy-id k1
-ssh-copy-id k2
-ssh-copy-id k3
+for i in k1 k2 k3 c4 c5 elastic
+do ssh-copy-id $i
+done
 
 Install multinode inventory
 
@@ -381,7 +384,8 @@ sudo sysctl -p /etc/sysctl.d/99-elastic.conf
 #       PROBLEMS
 #######################################################################
 
-### None of the below suggested solutions work. Consider it work in progress.
+### The loadbalancer management network problem was solved
+### by using a provider network for lbmgmt
 
 lb-mgmt-net is isolated VXLAN 
 --> transfer octavia-healthmanager port's MAC and IP to o-hm0 and
@@ -403,9 +407,13 @@ Or lb-mgmt-net is VLAN
 -->    sudo ip a add 192.168.100.1/24 dev virbr1.100
 Do we also need an interface for VLAN 1000? (lb-mgmt-net)?
 
+### no solution yet for the GET /info problem
+
 cinder-backup can't GET /info from Swift. May be due to incorrect 
 setting of proxy-server expose_info (should be true).
 GET /info should not require authentication.
+
+### Problem below solved: fluentd listens when it has access to elastic
 
 Swift logs to UDP port 5410, but nobody listens. Swift logs go nowhere. 
 It seems that fluentd is supposed to listen on 5410, but it doesn't.

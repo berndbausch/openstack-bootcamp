@@ -1,6 +1,7 @@
 #
 #  To be run on deployer
 #
+sudo apt update
 sudo apt install python3-dev libffi-dev gcc libssl-dev -y
 # make venv
 sudo apt install python3-venv -y
