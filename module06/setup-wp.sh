@@ -11,8 +11,20 @@ tar xf latest.tar.gz
 mkdir /var/www/html/blog
 cp -rn wordpress/* /var/www/html/blog
 
+
+# obtain DB parameters from metadata
+# First, get the metadata file
+curl -O 169.254.169.254/openstack/latest/meta_data.json
+
+# Next, use jq to get the metadata items from the file.
+db_name=$(jq -r .meta.db_name meta_data.json)
+db_user=$(jq -r .meta.db_user meta_data.json)
+db_password=$(jq -r .meta.db_password meta_data.json)
+db_ip=$(jq -r .meta.db_ipaddress meta_data.json)
+
 cd /var/www/html/blog
 mv wp-config-sample.php wp-config.php
-sed -i s/database_name_here/wpdb/ wp-config.php
-sed -i s/username_here/wp/ wp-config.php
-sed -i s/password_here/pw/ wp-config.php
+sed -i s/database_name_here/$db_name/ wp-config.php
+sed -i s/username_here/$db_user/ wp-config.php
+sed -i s/password_here/$db_password/ wp-config.php
+sed -i s/localhost/$db_ip/ wp-config.php
