@@ -8,26 +8,13 @@ parameters:
     description: Max size of the autoscaling group
     constraints:
       - range: { min: 2, max: 5 }
-  img:
+  nw:
     type: string
-    description: The image from which the instances are provisioned
+    description: The network to connect the instances to
     constraints:
-      - allowed_values: [ 'fedora' ]
+      - allowed_values: [ 'private', 'appnet' ]
 
 resources:
-
-type: OS::Nova::Server
-properties:
-  name: wpdb
-  config_drive: true
-  image: { get_param: img }
-  flavor: wpsmall
-  networks:
-    - network: "timetravel-net"
-  metadata: {"metering.server_group": "wordpress"}
-  user_data_format: RAW
-  user_data: 
-  get_file: /home/nobleprog/setup-wpdb.sh
 #
 # The auto scaling group defines a number of servers
 # (between 1 and 5, starting with the desired number of
@@ -42,22 +29,19 @@ properties:
       min_size: 1
       resource:
 #
-# The Wordpress servers
+# Servers are configured to run a mindless memory user
 #
         type: OS::Nova::Server
         properties:
-          name: wp
           config_drive: true
-          image: { get_param: img }
-          flavor: wpsmall
+          image: 'ubuntu'
+          flavor: d3
           networks:
-            - network: "timetravel-net"
-          metadata: 
-            "metering.server_group": "wordpress"
-            "db_ip": { get_attr: [wpdb, networks, timetravel-net, 0] }
+            - network: { get_param: nw }
+          metadata: {"metering.server_group": "myapp"}
           user_data_format: RAW
           user_data: 
-            get_file: /home/nobleprog/setup-wp.sh
+            get_file: /home/ubuntu/pressure.sh
 #
 # Scaling policy is linked to autoscaling group
 #
