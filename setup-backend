@@ -1,0 +1,38 @@
+cd
+
+. /etc/kolla/admin-openrc.sh
+openstack flavor create --ram 2048 --disk 10 --vcpus 1 wpsmall
+
+. demorc.sh 
+
+openstack image create --file openstack-bootcamp/module04/Fedora-Cloud-Base-34-1.2.x86_64.qcow2 --disk-format qcow2 fedora
+openstack keypair create key1 --public-key .ssh/id_rsa.pub 
+
+openstack security group create ssh
+openstack security group rule create ssh --proto icmp
+openstack security group rule create ssh --proto tcp --dst-port 22
+openstack security group create web
+openstack security group rule create web --proto icmp
+openstack security group rule create web --proto tcp --dst-port 80
+
+openstack network create backend
+openstack subnet create backend-subnet --network backend --subnet-range 192.168.0.0/24
+
+openstack router create backend-router
+openstack port create --network timetravel-net ttrouter-port
+openstack router add port backend-router ttrouter-port
+openstack router add subnet backend-router backend-subnet
+
+openstack router set backend-router --route destination=0.0.0.0/0,gateway=10.0.0.1
+backend_ip=$(openstack router show backend-router -c interfaces_info -f yaml | awk '/10.0.0/ {print $3}')
+echo >>> backend-router IP address $backend_ip
+openstack router set timetravel-router --route destination=192.168.0.0/24,gateway=$backend_ip
+openstack subnet set timetravel-subnet --host-route destination=192.168.0.0/24,gateway=$backend_ip
+
+cd ~/openstack-bootcamp/module06
+openstack server create --image fedora --flavor wpsmall --network backend --key-name key1 --user-data setup-wpdb.sh wpdb
+dbip=$(openstack server show wpdb -c addresses -f value|cut -f2 -d=)
+echo DB server IP address $dbip
+openstack server create --image fedora --flavor wpsmall --network timetravel-net --key-name key1 --user-data setup-wp.sh --property db_ipaddress=$dbip wp1
+openstack server create --image fedora --flavor wpsmall --network timetravel-net --key-name key1 --user-data setup-wp.sh --property db_ipaddress=$dbip wp2
+
