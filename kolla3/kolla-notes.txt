@@ -39,23 +39,25 @@ a single controller configuration.
 
 2- Customize the Ubuntu VM.
    If you do this right, you will have less work installing the servers.
-   Use visudo to configure password-less sudo.
-   Edit /etc/netplan/00...yaml. Replace the first NIC with ens3.
-   This is required because the Ubuntu machine uses virtio, but the 
-   ultimate servers use E1000 as the NIC model. 
-   You can change that by editing make-servers.sh, but you will be 
-   on your own then. Do it if you know what you are doing.
-   Configure two further NICs for the external and LB Mgmt networks:
+   - Use visudo to configure password-less sudo.
+   - Edit /etc/netplan/00...yaml. Replace the first NIC with ens3.
+     This is required because the Ubuntu machine uses virtio, but the 
+     ultimate servers use E1000 as the NIC model. 
+     You can change that by editing make-servers.sh, but you will be 
+     on your own then. Do it if you know what you are doing.
+   - Configure two further NICs for the external and LB Mgmt networks:
        ens4:
          addresses: []
        ens5:
          addresses: [192.68.1.200.201/24]
-   Use ssh-copy-id to add your public SSH key to the stack user.   
+   - Use ssh-copy-id to add your public SSH key to the stack user.   
 
 3. Power the Ubuntu machine off and make its disk immutable.
    The only purpose of the disk is to serve as a backup disk for
    the servers' qcow2 root disks.
-   chattr +i ubuntu-base.qcow2
+   
+   sudo chmod a+r ubuntu-base.qcow2
+   sudo chattr +i ubuntu-base.qcow2
 
 ######################################################################
                       Create the Kolla VMs
@@ -205,7 +207,7 @@ kolla-genpwd
 # or use it unchanged.
 # One detail that may require modification: Currently, DEBUG logs are
 # configured. This can put too much load on the overall system.
-cp $HOME/openstack-bootcamp/kolla3/globals.yml /etc/kolla3
+cp $HOME/openstack-bootcamp/kolla3/globals.yml /etc/kolla
 
 ####################################################################
      Run a Docker registry on the deployer
@@ -256,7 +258,7 @@ kolla-ansible octavia-certificates
 ####################################################################
 
 # The bootstrap-servers step was done before creating Swift rings
-kolla-ansible -i multinode bootstrap-servers
+kolla-ansible -i multi-compute bootstrap-servers
 kolla-ansible -i multi-compute prechecks
 kolla-ansible -i multi-compute deploy
 
