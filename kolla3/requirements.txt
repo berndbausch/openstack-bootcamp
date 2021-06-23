@@ -1,0 +1,8 @@
+ansible<2.10
+kolla-ansible
+python-openstackclient
+python-octaviaclient
+python-neutronclient
+osc-placement
+diskimage-builder
+
