@@ -1,34 +1,66 @@
 
+---------------------------------------------------------------------------------------
+Make the Loadbalancer management network accessible to controllers
+---------------------------------------------------------------------------------------
 By default, kolla-ansible creates a VXLAN named lb-mgmt-net.
 
-Get port of DHCP server on that network:
-openstack port list --network lb-mgmt-net 
+Get DHCP server's port ID and host:
+    openstack port list --network lb-mgmt-net 
+    openstack network agent list --network lb-mgmt-net
 
-Get DHCP server's host: 
-openstack network agent list --network lb-mgmt-net
+We assume host is k1 for the rest of this document.
 
-Create port on same host. It's only purpose is reserving an IP address on this network: 
-openstack port create --network lb-mgmt-net --device-owner octavia --host k1 lb-mgmt-port
-
-Find VLAN ID associated with DHCP server's interface
-ssh k1 sudo docker exec openvswitch_vswitchd ovsdb-client dump unix:/var/run/openvswitch/db.sock Open_vSwitch Port name tag
+Find the VLAN ID (tag) that Openvswitch associated the with DHCP server's NIC.
+The NIC's name starts with "tap", then the first 12 characters of the port ID. 
+    ssh k1 sudo docker exec openvswitch_vswitchd ovsdb-client \
+                dump unix:/var/run/openvswitch/db.sock Open_vSwitch Port name tag
 	Port table
 	name           tag
 	-------------- ---
 	br-ex          []
 	...
-	tap4df0c7a2-27 1
-The NIC's name starts with "tap", then the first 12 characters of the port ID. 
+	tap4df0c7a2-27 1   <<< DHCP server's port ID starts with 4df0c7a2-27
 Here the VLAN ID (tag) is 1.
 
-Create a bridge port in br-int and give it the same tag:
-ssh k1 sudo docker exec openvswitch_vswitchd ovs-vsctl add-port br-int o-hm0 tag=1 -- set interface o-hm0 type=internal
+Create a bridge port in br-int and give it the same VLAN ID (tag) as before:
+    ssh k1 sudo docker exec openvswitch_vswitchd ovs-vsctl add-port br-int o-hm0 tag=1 -- \
+                                                           set interface o-hm0 type=internal
 These are two commands in one, separated by a double dash.
+Double-check success with 
+    ssh k1 ip a show dev o-hm0
+
+Create a port on lb-mgmt-net, located at the same host. 
+It's only purpose is reserving an IP address on this network: 
+    openstack port create --network lb-mgmt-net --device-owner Octavia:health-mgr --host k1 lb-mgmt-port
 
 Obtain lb-mgmt-port's IP address:
-IPADDR=$(openstack port show lb-mgmt-port -c fixed_ips -f yaml | awk '/ip_address/ {print $3}')
+    IPADDR=$(openstack port show lb-mgmt-port -c fixed_ips -f yaml | awk '/ip_address/ {print $3}')
 
 Bring o-hm0 up and give it the IP address of lb-mgmt-port:
-ssh k1 sudo ip a add ${IPADDR}/24 dev o-hm0
-ssh k1 sudo ip l set o-hm0 up
+    ssh k1 sudo ip a add ${IPADDR}/24 dev o-hm0
+    ssh k1 sudo ip l set o-hm0 up
 
+Double-check success. o-hm0 should be up and have its IP address, 
+and there should be a route to 172.16.0.0/24 via o-hm0.
+    ssh k1 ip a show dev o-hm0
+    ssh k1 ip r
+
+At this point, the network is accessible to k1. Add routes to the other 
+controllers via k1.
+
+    ssh k2 sudo ip r add 172.16.0.0/24 via 192.168.122.201
+    ssh k1 sudo ip r add 172.16.0.0/24 via 192.168.122.201
+
+Make routes persistent on k2 and k3. 
+
+    $ cat /etc/netplan/00-installer-config.yaml 
+    # This is the network config written by 'subiquity'
+    network:
+      ethernets:
+        ens3:
+          ....
+          routes:
+          - to: 172.16.0.0/24
+            via: 192.168.122.201
+
+Make o-hm0's address persistent on k1.
