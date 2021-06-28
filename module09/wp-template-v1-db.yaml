@@ -13,16 +13,16 @@ resources:
   dbserver:
     type: OS::Nova::Server
     properties:
-      image: dbimage
-      flavor: d2
+      image: fedora
+      flavor: wpsmall
       networks: [network: "backend"]
-      key_name: demokey
+      key_name: key1
       user_data_format: RAW
       user_data: 
-        get_file: /home/stack/module07/provision-db-vol.sh
+        get_file: /home/nobleprog/openstack-bootcamp/module09/setup-wpdb.sh
       metadata:
-        db_name: wp
-        db_user: wp
+        db_name: wordpress
+        db_user: wpuser
         db_password: pw
       block_device_mapping: [ { device_name: "vdb", volume_id: { get_resource: dbvol } } ] 
 

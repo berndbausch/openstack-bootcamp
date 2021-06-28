@@ -1,11 +1,8 @@
-# To be executed on the deployer k1
-if [[ $(hostname) != k1 ]]
-then echo please run this script on the deployer k1
-     exit 1
-fi
+# To be executed on the deployer
 
 pip install python-openstackclient   # doc says "python3-openstackclient"
 pip install osc-placement
+pip install python-heatclient
 
 kolla-ansible post-deploy            # create adminrc with correct password
 . /etc/kolla/admin-openrc.sh
@@ -18,4 +15,5 @@ export EXT_NET_GATEWAY=192.168.100.1
 
 ./venv/share/kolla-ansible/init-runonce
 
-ansible -i multi-compute control -m apt -a "name=mariadb-client,libvirt-clients" --become
+ansible -i multi-compute control -m apt -a "name=mariadb-client" --become
+ansible -i multi-compute compute -m apt -a "name=libvirt-clients" --become

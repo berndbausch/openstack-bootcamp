@@ -19,7 +19,7 @@ then
 fi
 
 # install DB
-dnf install mariadb-server -y
+dnf install mariadb-server jq -y
 
 # enable and launch web server and database server
 systemctl enable mariadb.service --now

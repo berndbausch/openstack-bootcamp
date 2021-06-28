@@ -1,7 +1,7 @@
 
 heat_template_version: rocky
 
-description: Static WordPress application with webserver
+description: Static WordPress application with webserver and Floating IP
 
 resources:
 
@@ -22,7 +22,7 @@ resources:
   dbserver:
     type: OS::Nova::Server
     properties:
-      image: fedora
+      image: dbimage
       flavor: wpsmall
       networks: [network: "backend"]
       key_name: key1
@@ -45,16 +45,29 @@ resources:
       name: wp1
       image: fedora
       flavor: wpsmall
-      networks: [network: "timetravel-net"]
+      networks: [port: { get_resource: webport }]
       key_name: key1
       user_data_format: RAW
       user_data: 
-        get_file: /home/nobleprog/openstack-bootcamp/module09/setup-wp.sh
+        get_file: /home/nobleprog/openstack-bootcamp/module09/setup-wpdb.sh
       metadata:
         db_name: wordpress
         db_user: wpuser
         db_password: pw
         db_ipaddress: { get_attr: [ dbserver, addresses, backend, 0, addr ] }
+
+# The following resource adds wp1 to the loadbalancer pool.
+# Again, get_attr is used to obtain its fixed IP address.
+
+  lbmember-wp1:
+    type: OS::Neutron::LBaaS::PoolMember
+    properties:
+      address: { get_attr: [ wp1, addresses, backend, 0, addr ] }
+      admin_state_up: true
+      pool: wppool
+      protocol_port: 80
+      subnet: timetravel-subnet
+      weight: 1
 
   webserver2:
     type: OS::Nova::Server
@@ -62,14 +75,23 @@ resources:
       name: wp2
       image: fedora
       flavor: wpsmall
-      networks: [network: "timetravel-net"]
+      networks: [port: { get_resource: webport }]
       key_name: key1
       user_data_format: RAW
       user_data: 
-        get_file: /home/nobleprog/openstack-bootcamp/module09/setup-wp.sh
+        get_file: /home/nobleprog/openstack-bootcamp/module09/setup-wpdb.sh
       metadata:
         db_name: wordpress
         db_user: wpuser
         db_password: pw
         db_ipaddress: { get_attr: [ dbserver, addresses, backend, 0, addr ] }
 
+  lbmember-wp2:
+    type: OS::Neutron::LBaaS::PoolMember
+    properties:
+      address: { get_attr: [ wp2, addresses, backend, 0, addr ] }
+      admin_state_up: true
+      pool: wppool
+      protocol_port: 80
+      subnet: timetravel-subnet
+      weight: 1

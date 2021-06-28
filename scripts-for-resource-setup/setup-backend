@@ -25,14 +25,14 @@ openstack router add subnet backend-router backend-subnet
 
 openstack router set backend-router --route destination=0.0.0.0/0,gateway=10.0.0.1
 backend_ip=$(openstack router show backend-router -c interfaces_info -f yaml | awk '/10.0.0/ {print $3}')
-echo >>> backend-router IP address $backend_ip
+echo ">>> backend-router IP address $backend_ip"
 openstack router set timetravel-router --route destination=192.168.0.0/24,gateway=$backend_ip
 openstack subnet set timetravel-subnet --host-route destination=192.168.0.0/24,gateway=$backend_ip
 
 cd ~/openstack-bootcamp/module06
 openstack server create --image fedora --flavor wpsmall --network backend --key-name key1 --user-data setup-wpdb.sh wpdb
 dbip=$(openstack server show wpdb -c addresses -f value|cut -f2 -d=)
-echo DB server IP address $dbip
+echo "DB server IP address $dbip"
 openstack server create --image fedora --flavor wpsmall --network timetravel-net --key-name key1 --user-data setup-wp.sh --property db_ipaddress=$dbip wp1
 openstack server create --image fedora --flavor wpsmall --network timetravel-net --key-name key1 --user-data setup-wp.sh --property db_ipaddress=$dbip wp2
 
