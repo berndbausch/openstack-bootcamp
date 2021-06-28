@@ -10,6 +10,6 @@ fi
 
 sudo virt-install --noautoconsole --cpu host --name c$NUM --ram $((12*1024)) --vcpus 3 \
                   --graphics vnc,listen=0.0.0.0,port=593$1  \
-                  --network network=default --network network=provider --network network=lbmgmt   \
+                  --network network=default --network network=provider \
                   --import                                     \
                   --disk c$NUM.qcow2,bus=scsi                   

@@ -40,16 +40,15 @@ a single controller configuration.
 2- Customize the Ubuntu VM.
    If you do this right, you will have less work installing the servers.
    - Use visudo to configure password-less sudo.
+   - Set the hostname to k1. Adjust /etc/hosts.
    - Edit /etc/netplan/00...yaml. Replace the first NIC with ens3.
      This is required because the Ubuntu machine uses virtio, but the 
      ultimate servers use E1000 as the NIC model. 
      You can change that by editing make-servers.sh, but you will be 
      on your own then. Do it if you know what you are doing.
-   - Configure two further NICs for the external and LB Mgmt networks:
+   - Configure one further NICs for the external network:
        ens4:
          addresses: []
-       ens5:
-         addresses: [192.68.1.200.201/24]
    - Use ssh-copy-id to add your public SSH key to the stack user.   
 
 3. Power the Ubuntu machine off and make its disk immutable.
@@ -81,19 +80,18 @@ If you configured the original Ubuntu VM right, it has passwordless sudo
 for user stack and allows passwordless login to user stack.
 
 This can be scripted but is currently manual. The process is: 
-- Nothing needs to be done for k1.
 - Power all servers down except for k2.
 - Change its netplan and hostname. Ping its new IP for testing.
 - Optionally, create unique SSH host keys
 - Power up the next server and so on. 
   Don't forget the Elastic server with IP address 209.
-- When done, power up k1.
+- When done, power up k1. Set its hostname to k1.
 
 To change the netplan and hostname, where X is the correct IP:
 
-    sed s/201/20X/ netplan.yaml | ssh 192.168.122.201 sudo tee /etc/netplan/00*yaml
-    ssh 192.168.122.201 sudo hostnamectl set-hostname HOSTNAME
-    ssh 192.168.122.201 sudo netplan apply
+    sed s:ADDR:20X: netplan.yaml | ssh k1 sudo tee /etc/netplan/00*yaml
+    ssh k1 sudo hostnamectl set-hostname HOSTNAME
+    ssh k1 sudo netplan apply
     ping 192.168.122.20X
 
 The servers have identical SSH host keys. Unique SSH host keys are not 
