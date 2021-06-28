@@ -1,0 +1,104 @@
+
+heat_template_version: rocky
+
+description: Static WordPress application with webserver and Floating IP
+
+parameters:
+
+  volume:
+    type: string
+    default: dbvol
+    description: Name of the WordPress DB volume
+
+  frontnet:
+    type: string
+    default: frontend
+    description: Name of the frontend network
+
+  backnet:
+    type: string
+    default: backend
+    description: Name of the backend network
+
+  dbserver_name:
+    type: string
+    default: dbserver
+    description: Name of the database server
+
+  webserver_name:
+    type: string
+    default: webserver
+    description: Name of the web server
+
+resources:
+
+  dbvol:
+    type: OS::Cinder::Volume
+    properties:
+      name: { get_param: volume }
+      size: 1
+
+# Most properties of dbserver should be self-explanatory.
+# The metadata property corresponds to the --property option of
+# openstack server create.
+# User data format must be set to RAW, otherwise HEAT_CFNTOOLS is assumed.
+# The networks property is a list of networks.
+# block_device_mapping is a list of mappings. Each mapping is a set. 
+# The volume ID is obtained from the dbvol resource above.
+
+  dbserver:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: dbserver_name }
+      image: dbimage
+      flavor: d2
+      networks: [network: { get_param: backnet }]
+      key_name: demokey
+      user_data_format: RAW
+      user_data: 
+        get_file: /home/stack/module07/provision-db-vol.sh
+      metadata:
+        db_name: wp
+        db_user: wp
+        db_password: pw
+      block_device_mapping: [ { device_name: "vdb", volume_id: { get_resource: dbvol } } ] 
+
+# webserver is similar to dbserver. Image is fedora, different user_data,
+# no block device mapping, and the ip_address metadata item is obtained from 
+# the backend address of dbserver.
+
+  webport:
+    type: OS::Neutron::Port
+    properties:
+      name: webport
+      network: { get_param: frontnet }
+      security_groups: [default, web]
+  
+  webfip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: public
+      port_id: { get_resource: webport }
+
+  webserver:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: webserver_name }
+      image: fedora
+      flavor: d2
+      networks: [port: { get_resource: webport }]
+      key_name: demokey
+      user_data_format: RAW
+      user_data: 
+        get_file: /home/stack/module07/provision-web.sh
+      metadata:
+        db_name: wp
+        db_user: wp
+        db_password: pw
+        db_ipaddress: { get_attr: [ dbserver, addresses, backend, 0, addr ] }
+
+outputs:
+
+  web_ip:
+    description: "Floating IP address of WordPress site"
+    value: { get_attr: [ webfip, floating_ip_address ] }

@@ -1,0 +1,69 @@
+
+heat_template_version: rocky
+
+description: Static WordPress application with webserver and Floating IP
+
+resources:
+
+  dbvol:
+    type: OS::Cinder::Volume
+    properties:
+      name: dbvol
+      size: 1
+
+# Most properties of dbserver should be self-explanatory.
+# The metadata property corresponds to the --property option of
+# openstack server create.
+# User data format must be set to RAW, otherwise HEAT_CFNTOOLS is assumed.
+# The networks property is a list of networks.
+# block_device_mapping is a list of mappings. Each mapping is a set. 
+# The volume ID is obtained from the dbvol resource above.
+
+  dbserver:
+    type: OS::Nova::Server
+    properties:
+      image: dbimage
+      flavor: d2
+      networks: [network: "backend"]
+      key_name: demokey
+      user_data_format: RAW
+      user_data: 
+        get_file: /home/stack/module07/provision-db-vol.sh
+      metadata:
+        db_name: wp
+        db_user: wp
+        db_password: pw
+      block_device_mapping: [ { device_name: "vdb", volume_id: { get_resource: dbvol } } ] 
+
+# webserver is similar to dbserver. Image is fedora, different user_data,
+# no block device mapping, and the ip_address metadata item is obtained from 
+# the backend address of dbserver.
+
+  webport:
+    type: OS::Neutron::Port
+    properties:
+      name: webport
+      network: "frontend"
+      security_groups: [default, web]
+  
+  webfip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: public
+      port_id: { get_resource: webport }
+
+  webserver:
+    type: OS::Nova::Server
+    properties:
+      image: fedora
+      flavor: d2
+      networks: [port: { get_resource: webport }]
+      key_name: demokey
+      user_data_format: RAW
+      user_data: 
+        get_file: /home/stack/module07/provision-web.sh
+      metadata:
+        db_name: wp
+        db_user: wp
+        db_password: pw
+        db_ipaddress: { get_attr: [ dbserver, addresses, backend, 0, addr ] }

@@ -1,0 +1,28 @@
+heat_template_version: rocky
+
+description: Static WordPress application
+
+resources:
+
+  dbvol:
+    type: OS::Cinder::Volume
+    properties:
+      name: dbvol
+      size: 1
+
+  dbserver:
+    type: OS::Nova::Server
+    properties:
+      image: dbimage
+      flavor: d2
+      networks: [network: "backend"]
+      key_name: demokey
+      user_data_format: RAW
+      user_data: 
+        get_file: /home/stack/module07/provision-db-vol.sh
+      metadata:
+        db_name: wp
+        db_user: wp
+        db_password: pw
+      block_device_mapping: [ { device_name: "vdb", volume_id: { get_resource: dbvol } } ] 
+
