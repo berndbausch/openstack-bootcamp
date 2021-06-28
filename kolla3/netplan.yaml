@@ -8,9 +8,13 @@ network:
       nameservers:
         addresses: [10.0.3.1, 1.1.1.1]
         search: []
+# The route below must be removed from k1
       routes:
         - to: 172.16.0.0/24
           via: 192.168.122.201
     ens4:
       addresses: []
+# o-hm0 is only required on k1, but should cause no trouble elsewhere.
+    o-hm0:
+      addresses: [172.16.0.166/24]
   version: 2
