@@ -1,32 +1,32 @@
 #!/bin/bash
 
-# If there is a second disk, try mounting it under /var/lib/mysql.
-# If that fails, create a filesystem and try again.
-
+# If a volume exists, mount it persistently
 if [ -e /dev/vdb ]
 then
-    echo STOPPING MYSQL
-    systemctl stop mariadb
+    mkdir -p /var/lib/mysql
     echo "/dev/vdb /var/lib/mysql ext4 defaults 0 0" >> /etc/fstab
     mount -a
-
+    
     if (( $? != 0 ))   # mount failed
     then
         mkfs -t ext4 /dev/vdb
         mount -a
     fi
-
+    
     # Fix ownership and SELinux label of /var/lib/mysql
     chown mysql:mysql /var/lib/mysql/
     chcon -t mysqld_db_t /var/lib/mysql/
-
-    echo RESTARTING MYSQL
-    systemctl start mariadb
 fi
+
+# install DB
+dnf install mariadb-server -y
+
+# enable and launch web server and database server
+systemctl enable mariadb.service --now
 
 # obtain DB parameters from metadata
 # First, get the metadata file
-curl -O 169.254.169.254/openstack/latest/meta_data.json 
+curl -O 169.254.169.254/openstack/latest/meta_data.json
 
 # Next, use jq to get the metadata items from the file
 db_name=$(jq -r .meta.db_name meta_data.json)
