@@ -1,3 +1,6 @@
+
+Updated for Wallaby 20210926
+
 ######################################################################
                        Kolla VM setup
 ######################################################################
@@ -176,8 +179,9 @@ source ~/venv/bin/activate
 
 # update pip and install the correct version of Ansible
 # For OpenStack Victoria, 2.9 is needed.
+# Wallaby requires less than 3.
 pip install -U pip
-pip install 'ansible<2.10'
+pip install 'ansible<3.0'
 
 # install and configure Kolla-Ansible
 pip install kolla-ansible
@@ -215,6 +219,19 @@ https://docs.openstack.org/kolla-ansible/latest/user/multinode.html#option-2-reg
 
 First, install Docker on the deployer. 
 https://docs.docker.com/engine/install/ubuntu/
+
+$ sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+$ echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+$ sudo apt-get update
+$ sudo apt-get install docker-ce docker-ce-cli containerd.io
 
 Kolla-Ansible documents two Docker registry options. I opt for a mirror:
 https://docs.openstack.org/kolla-ansible/latest/user/multinode.html#option-2-registry-mirror
@@ -255,10 +272,13 @@ kolla-ansible octavia-certificates
      Set up the cloud
 ####################################################################
 
+# Below, set INV to the desired inventory file
+INV=single-controller
+
 # The bootstrap-servers step was done before creating Swift rings
-kolla-ansible -i multi-compute bootstrap-servers
-kolla-ansible -i multi-compute prechecks
-kolla-ansible -i multi-compute deploy
+kolla-ansible -i $INV bootstrap-servers    # 2 minutes
+kolla-ansible -i $INV prechecks            # 2 minutes
+kolla-ansible -i $INV deploy               # 15 minutes
 
 The time this takes depends on the performance of your VMs and your 
 internet bandwidth. Count 45 minutes at least.
@@ -276,7 +296,7 @@ of post-deploy work is required.
 pip install python-openstackclient python-octaviaclient python-neutronclient osc-placement
 
 # Generate an admin RC file 
-kolla-ansible -i multi-compute post-deploy
+kolla-ansible -i $INV post-deploy
 
 # Script creates the Cirros image, external network "public1" and a 
 # tenant network named "demo-net"
@@ -320,8 +340,8 @@ openstack image create amphora-x64-haproxy.qcow2 --container-format bare \
 Useful software that should be added to deployer, controllers and computes
 ####################################################################
 
-ansible -i multi-compute -m apt -a name=libvirt-clients compute
-ansible -i multi-compute -m apt -a name=mariadb-client-10.3 control
+ansible -i $INV -b -m apt -a name=libvirt-clients compute
+ansible -i $INV -b -m apt -a name=mariadb-client-10.3 control
 sudo apt install mariadb-client    # on deployer
 
 #######################################################################
