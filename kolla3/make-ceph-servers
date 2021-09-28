@@ -1,0 +1,35 @@
+
+function make_ceph {
+
+	if [[ $# != 1 ]]
+	then
+	    echo need machine number and nothing else
+	    exit 1
+	else
+	    NUM=$1
+	fi
+
+	[ ! -f cephroot$NUM.qcow2 ] && sudo qemu-img create -f qcow2 -b ubuntu-base.qcow2 -F qcow2 cephroot$NUM.qcow2  
+	[ ! -f cephdisk$NUM.qcow2 ] && sudo qemu-img create -f qcow2 cephdisk$NUM.qcow2 50G
+
+	sudo virt-install --noautoconsole --cpu host --name ceph$NUM --ram $((4*1024)) --vcpus 1 \
+			  --graphics vnc,listen=0.0.0.0,port=594$1  \
+			  --network network=default --network network=provider \
+			  --import                                     \
+			  --disk cephroot$NUM.qcow2,bus=scsi --disk cephdisk$NUM.qcow2,bus=scsi                   
+}
+
+
+
+for i in 6 7 8
+do
+	echo ================================================
+	echo "           Creating ceph$i"
+	echo ================================================
+	make_ceph $i
+	sleep 20
+	ssh k1 sudo hostnamectl set-hostname  ceph$i
+	ssh k1 sudo sed -i s/122.201/122.20$i/ /etc/netplan/00*
+	virsh shutdown ceph$i
+done
+
